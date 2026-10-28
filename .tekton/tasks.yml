@@ -1,0 +1,38 @@
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cleanup-task
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: cleanup
+      image: node:20
+      script: |
+        #!/bin/sh
+        set -eu
+        cd "$(workspaces.source.path)"
+        echo "Starting cleanup..."
+        rm -rf coverage .nyc_output
+        echo "Cleanup completed successfully."
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: test-task
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: run-jest-tests
+      image: node:20
+      script: |
+        #!/bin/sh
+        set -eu
+        cd "$(workspaces.source.path)"
+        echo "Installing project dependencies..."
+        npm ci
+        echo "Running unit tests with Jest..."
+        npx jest --runInBand
